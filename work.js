@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 退出登录按钮的事件监听器
     logoutBtn.addEventListener('click', () => {
         localStorage.removeItem('token');
-        window.location.href = 'login.html';
+            // 更改为完整的、绝对的 URL
+        window.location.href = 'https://anchorx.ca/login/';
     });
 });

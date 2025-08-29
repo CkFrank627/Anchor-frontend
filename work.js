@@ -119,41 +119,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function updateWork() {
-        if (!currentWorkId) {
-            alert('请先选择一个作品或创建新作品！');
-            return;
-        }
-        
-        const title = titleInput.value;
-        const content = contentInput.value;
+    async function updateWork(id, content) {
+    try {
+        // 1. 修正 URL: 不再在 URL 中拼接 id
+        const response = await fetch('https://lit-stream-78819-b3e5745b1632.herokuapp.com/api/works', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            // 2. 将作品ID添加到请求体中
+            body: JSON.stringify({
+                _id: id,
+                content: content
+            })
+        });
 
-        try {
-            const response = await fetch(API_BASE_URL, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    _id: currentWorkId, // 将作品ID放在请求体中
-                    title,
-                    content
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || '更新作品失败');
+        // 3. 在解析 JSON 之前检查响应状态
+        if (!response.ok) {
+            // 如果响应不成功，尝试解析错误信息，或使用默认错误信息
+            const errorText = await response.text();
+            console.error('保存作品失败:', errorText);
+            try {
+                const errorData = JSON.parse(errorText);
+                alert('保存作品失败：' + (errorData.message || '未知错误'));
+            } catch (jsonError) {
+                alert('保存作品失败，请检查网络。');
             }
-
-            alert('作品更新成功！');
-            fetchWorks(token); // 刷新作品列表
-        } catch (error) {
-            console.error('更新作品失败:', error);
-            alert('更新作品失败：' + error.message);
+            return null;
         }
+
+        const data = await response.json();
+        // 如果后端返回的是更新后的作品数据，可以在这里处理
+        return data; 
+
+    } catch (error) {
+        console.error('保存作品失败:', error);
+        alert('保存作品失败，请检查网络。');
+        return null;
     }
+}
 
     async function deleteWork() {
         if (!currentWorkId) {
